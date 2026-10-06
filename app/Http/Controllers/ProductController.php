@@ -17,7 +17,9 @@ class ProductController extends Controller
 
         // Filtro por categoría
         if ($request->category) {
-            $query->whereHas('category', fn($q) =>
+            $query->whereHas(
+                'category',
+                fn($q) =>
                 $q->where('slug', $request->category)
             );
         }
@@ -48,7 +50,11 @@ class ProductController extends Controller
             'products'   => $products,
             'categories' => $categories,
             'filters'    => $request->only([
-                'category', 'search', 'min_price', 'max_price', 'sort_by'
+                'category',
+                'search',
+                'min_price',
+                'max_price',
+                'sort_by'
             ]),
         ]);
     }
@@ -69,5 +75,18 @@ class ProductController extends Controller
             'product' => $product,
             'related' => $related,
         ]);
+    }
+    public function generateDescription(Request $request)
+    {
+        $request->validate(['name' => 'required|string']);
+
+        $groq = app('App\\Services\\GroqService');
+
+        $response = $groq->ask(
+            "Eres un experto en copywriting para e-commerce. Escribe descripciones de productos atractivas, concisas y persuasivas en español. Máximo 2 frases.",
+            "Escribe una descripción de producto para: {$request->name}"
+        );
+
+        return response()->json(['description' => $response]);
     }
 }

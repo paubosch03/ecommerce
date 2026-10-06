@@ -25,6 +25,10 @@ Route::get('/', function () {
     ]);
 })->name('home');
 
+Route::get('/dashboard', function () {
+    return redirect()->route('home');
+})->middleware(['auth', 'verified'])->name('dashboard');
+
 // ─── CATÁLOGO (público) ──────────────────────────────────
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
 Route::get('/products/{product:slug}', [ProductController::class, 'show'])->name('products.show');
@@ -54,4 +58,11 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::resource('orders', AdminOrderController::class)->only(['index', 'show', 'update']);
 });
 
-require __DIR__.'/auth.php';
+Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/', fn() => redirect()->route('admin.products.index'));
+    Route::post('/products/generate-description', [\App\Http\Controllers\Admin\ProductController::class, 'generateDescription'])->name('products.generate-description');
+    Route::resource('products', AdminProductController::class);
+    Route::resource('orders', AdminOrderController::class)->only(['index', 'show', 'update']);
+});
+
+require __DIR__ . '/auth.php';
